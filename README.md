@@ -11,6 +11,7 @@ Châtaigne devra esquiver les fils barbelés et échapper à Hadès, son ennemi.
 
 ### Chataigne
 ![titre](Image/Chataigne.png)
+
 Châtaigne, chat de couleur marron, sans réelle appartenance hors la gentille poissonnière. 
 Il est svelte, souple et est plutôt téméraire.
 Il est capable de sauter de plateforme en plateforme, grimper des murs, se faufiler dans les barbelés, il attaque avec ses griffes acérés et dash grâce à ses puissantes pattes arrières.
