@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 /* 
 
-- Courir
-- S'accroupir
+- Courir done
+- S'accroupir done
+- Climb done
 - une barre de vie constituer de 9 coeurs
 - Une zone ou tu es ralenti 
 - Respawn & Checkpoint
@@ -12,32 +13,32 @@ using UnityEngine;
 - Collectibles
 */
 
-/*
-Il arrive que le dash en diagonal propulse Sunny loin dans la map.
-C'est parce que, (pour l'exemple), le vector horizontal et vertical sont de 1, du coup en diagonale ça les additionnes donc ca fait 2.
-Pour ça, il faut mettre une "normalize" et rajouter ses deux vecteurs ((donc x;1 et y;1)) pour qu'en diagonale ca fasse 0,5.
-*/
+
 public class Player : MonoBehaviour
 {
-    Rigidbody2D rb;
-    SpriteRenderer sr;
-    Animator animController;
-    Vector2 ref_velocity = Vector2.zero;
-    float walkingSpeed = 400f;
-    float runningSpeed = 800f;
-    float horizontalValue;
-    float verticalValue;
+    private Rigidbody2D rb;
+    private SpriteRenderer sr;
+    private Animator animController;
+    private Vector2 ref_velocity = Vector2.zero;
+    private float walkingSpeed = 400f;
+    private float runningSpeed = 800f;
+    //Lui mettre son animation, idem pour la course, le dash & le climb
+    private float crouchingSpeed = 200f;
+    private float horizontalValue;
+    private float verticalValue;
 
     //SerializeField sert à afficher les paramètres dans le player
     //Le dash limit sert à mettre une Limite de Dash, je peux le changer directement dans le "Inspector" du player.
-    [SerializeField] int dashLimit = 1;
-    [SerializeField] int currentDash;
-    [SerializeField] float jumpForce = 10f;
+    [SerializeField] private int dashLimit = 1;
+    [SerializeField] private int currentDash;
+    [SerializeField] private float jumpForce = 10f;
+    [SerializeField] private bool isCrouching = false;
+    private bool grounded = false;
     private bool canDash = true;
     private bool canJump = true;
     private bool canRun = true;
     private bool isJumping = false;
-    private bool isRunning = false;
+    [SerializeField] private bool isRunning = false;
     private bool isDashing = false;
     //C'est la force du dash en vertical et horizontal. Sunny se tourne automatiquement vers la droite, à modifier. 
     [SerializeField] private float horizontalDashingPower = 24f;
@@ -55,7 +56,6 @@ public class Player : MonoBehaviour
         animController = GetComponent<Animator>();
         currentDash = dashLimit;
     }
-
     // Update is called once per frame
     void Update()
     {
@@ -76,11 +76,27 @@ public class Player : MonoBehaviour
             isJumping = true;
             animController.SetBool("Jumping", true);
         }
-        
+
         if (Input.GetKeyDown(KeyCode.LeftControl) && canRun)
         {
             isRunning = true;
             animController.SetBool("Running", true);
+        }
+        if (Input.GetKeyUp(KeyCode.LeftControl) && canRun)
+        {
+            isRunning = false;
+            animController.SetBool("Running", false);
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftAlt))
+        {
+            isCrouching = true;
+            animController.SetBool("Crouching", true);
+        }
+        if (Input.GetKeyUp(KeyCode.LeftAlt))
+        {
+            isCrouching = false;
+            animController.SetBool("Crouching", false);
         }
 
         animController.SetFloat("speed", Mathf.Abs(horizontalValue));
@@ -99,17 +115,24 @@ public class Player : MonoBehaviour
         }
         if (isJumping)
         {
+            grounded = false;
             isJumping = false;
             rb.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);
             canJump = false;
         }
-
         //si tu es pas en train de courir c'est que tu es en train de marcher
-        float speedModifer;        
-        if (isRunning){
-            speedModifer = runningSpeed; 
+        float speedModifer;
+        if (isRunning)
+        {
+            Debug.Log("je crous");
+            speedModifer = runningSpeed;
         }
-        else{
+        else if (isCrouching)
+        {
+            speedModifer = crouchingSpeed;
+        }
+        else
+        {
             speedModifer = walkingSpeed;
         }
         Vector2 target_velocity = new Vector2(horizontalValue * speedModifer * Time.fixedDeltaTime, rb.velocity.y);
@@ -119,6 +142,7 @@ public class Player : MonoBehaviour
     private void OnTriggerStay2D(Collider2D collision)
     {
         currentDash = dashLimit;
+        grounded = true;
         canJump = true;
     }
 
@@ -134,10 +158,12 @@ public class Player : MonoBehaviour
         Vector2 DashDirection = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         DashDirection = DashDirection.normalized;
         DashDirection = new Vector2(DashDirection.x * horizontalDashingPower, DashDirection.y * verticalDashingPower);
-        if (!isRunning){
+        if (!isRunning)
+        {
             rb.velocity = DashDirection;
         }
-        else{
+        else
+        {
             rb.velocity += DashDirection;
         }
         Debug.Log(rb.velocity);
